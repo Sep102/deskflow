@@ -1878,8 +1878,25 @@ void Server::onMouseMoveSecondary(int32_t dx, int32_t dy)
 
 void Server::onMouseWheel(int32_t xDelta, int32_t yDelta)
 {
-  LOG_DEBUG1("onMouseWheel %+d,%+d", xDelta, yDelta);
+  LOG((CLOG_DEBUG1 "onMouseWheel initial %+d,%+d", xDelta, yDelta));
   assert(m_active != nullptr);
+
+  const char *envVal = std::getenv("DESKFLOW_MOUSEWHEEL_ADJUSTMENT");
+  if (envVal != nullptr) {
+    try {
+      double multiplier = std::stod(envVal);                                  // Convert to double
+      int32_t adjustedXDelta = static_cast<int32_t>(std::round(xDelta * multiplier)); // Apply multiplier and round
+      int32_t adjustedYDelta = static_cast<int32_t>(std::round(yDelta * multiplier));
+      LOG((CLOG_DEBUG2 "Adjusted to %+d,%+d using multiplier %.2f", adjustedXDelta, adjustedYDelta, multiplier));
+      xDelta = adjustedXDelta; // Update xDelta and yDelta to adjusted values
+      yDelta = adjustedYDelta;
+    } catch (const std::exception &e) {
+      // Log the error message from the exception
+      LOG((CLOG_ERR "Invalid DESKFLOW_MOUSEWHEEL_ADJUSTMENT value: %s. Exception: %s", envVal, e.what()));
+    }
+  } else {
+    LOG((CLOG_DEBUG1 "DESKFLOW_MOUSEWHEEL_ADJUSTMENT not set, using original values %+d,%+d", xDelta, yDelta));
+  }
 
   // relay
   m_active->mouseWheel(xDelta, yDelta);
