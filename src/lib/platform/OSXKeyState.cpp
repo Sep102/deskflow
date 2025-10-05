@@ -16,15 +16,18 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 // Note that some virtual keys codes appear more than once.  The
 // first instance of a virtual key code maps to the KeyID that we
 // want to generate for that code.  The others are for mapping
 // different KeyIDs to a single key code.
 static const uint32_t s_shiftVK = kVK_Shift;
+static const uint32_t s_shiftRightVK = kVK_RightShift;
 static const uint32_t s_controlVK = kVK_Control;
+static const uint32_t s_controlRightVK = kVK_RightControl;
 static const uint32_t s_altVK = kVK_Option;
+static const uint32_t s_altRightVK = kVK_RightOption;
 static const uint32_t s_superVK = kVK_Command;
+static const uint32_t s_superRightVK = kVK_RightCommand;
 static const uint32_t s_capsLockVK = kVK_CapsLock;
 static const uint32_t s_numLockVK = kVK_ANSI_KeypadClear; // 71
 
@@ -810,23 +813,35 @@ bool OSXKeyState::mapDeskflowHotKeyToMac(
   return true;
 }
 
-void OSXKeyState::handleModifierKeys(void *target, KeyModifierMask oldMask, KeyModifierMask newMask)
+void OSXKeyState::handleModifierKeys(void *target, uint32 virtualKey, KeyModifierMask oldMask, KeyModifierMask newMask)
 {
   // compute changed modifiers
   KeyModifierMask changed = (oldMask ^ newMask);
 
   // synthesize changed modifier keys
   if ((changed & KeyModifierShift) != 0) {
-    handleModifierKey(target, s_shiftVK, kKeyShift_L, (newMask & KeyModifierShift) != 0, newMask);
+    if (virtualKey == s_shiftRightVK)
+      handleModifierKey(target, s_shiftRightVK, kKeyShift_R, (newMask & KeyModifierShift) != 0, newMask);
+    else
+      handleModifierKey(target, s_shiftVK, kKeyShift_L, (newMask & KeyModifierShift) != 0, newMask);
   }
   if ((changed & KeyModifierControl) != 0) {
-    handleModifierKey(target, s_controlVK, kKeyControl_L, (newMask & KeyModifierControl) != 0, newMask);
+    if (virtualKey == s_controlRightVK)
+      handleModifierKey(target, s_controlRightVK, kKeyControl_R, (newMask & KeyModifierControl) != 0, newMask);
+    else
+      handleModifierKey(target, s_controlVK, kKeyControl_L, (newMask & KeyModifierControl) != 0, newMask);
   }
   if ((changed & KeyModifierAlt) != 0) {
-    handleModifierKey(target, s_altVK, kKeyAlt_L, (newMask & KeyModifierAlt) != 0, newMask);
+    if (virtualKey == s_altRightVK)
+      handleModifierKey(target, s_altRightVK, kKeyAlt_R, (newMask & KeyModifierAlt) != 0, newMask);
+    else
+      handleModifierKey(target, s_altVK, kKeyAlt_L, (newMask & KeyModifierAlt) != 0, newMask);
   }
   if ((changed & KeyModifierSuper) != 0) {
-    handleModifierKey(target, s_superVK, kKeySuper_L, (newMask & KeyModifierSuper) != 0, newMask);
+    if (virtualKey == s_superRightVK)
+      handleModifierKey(target, s_superRightVK, kKeySuper_R, (newMask & KeyModifierSuper) != 0, newMask);
+    else
+      handleModifierKey(target, s_superVK, kKeySuper_L, (newMask & KeyModifierSuper) != 0, newMask);
   }
   if ((changed & KeyModifierCapsLock) != 0) {
     handleModifierKey(target, s_capsLockVK, kKeyCapsLock, (newMask & KeyModifierCapsLock) != 0, newMask);
